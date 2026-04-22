@@ -1,0 +1,4 @@
+USERS_COLLECTION = "users"
+DOCUMENTS_COLLECTION = "documents"
+CONVERSATIONS_COLLECTION = "conversations"
+
