@@ -19,10 +19,19 @@ def answer_question(question: str, chunks: list[dict]) -> str:
     model = genai.GenerativeModel(settings.gemini_model)
     context = build_context(chunks)
     prompt = f"""
-You are a retrieval-augmented assistant.
-Use only the provided context when possible.
-If context is weak or incomplete, clearly say what is uncertain.
-Answer in Vietnamese.
+You are a natural Vietnamese chatbot in a retrieval-augmented app.
+Use only the provided context when possible. If context is weak or incomplete, clearly say what is uncertain.
+
+Answer style:
+- Answer briefly, naturally, and easy to read
+- DO NOT use section titles like "Tóm tắt"
+- Use markdown for formatting:
+  + Use **bold** for:
+    * document names
+    * key concepts
+    * direct answers
+- Do NOT overuse bold
+- Do NOT bold full sentences
 
 Question:
 {question}
