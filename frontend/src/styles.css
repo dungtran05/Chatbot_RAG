@@ -93,6 +93,63 @@ button {
   font-weight: 800;
 }
 
+.upload-sidebar-button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(51, 161, 255, 0.28);
+  border-radius: 14px;
+  color: #eef6ff;
+  background:
+    linear-gradient(135deg, rgba(51, 161, 255, 0.18), rgba(247, 183, 51, 0.1)),
+    rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.16);
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.upload-sidebar-button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(51, 161, 255, 0.52);
+  background:
+    linear-gradient(135deg, rgba(51, 161, 255, 0.24), rgba(247, 183, 51, 0.14)),
+    rgba(255, 255, 255, 0.08);
+}
+
+.upload-sidebar-button__icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: 12px;
+  color: #101318;
+  background: #f7b733;
+  font-size: 1.7rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.upload-sidebar-button__text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.upload-sidebar-button__text strong {
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 850;
+  line-height: 1.3;
+}
+
+.upload-sidebar-button__text small {
+  color: #aeb8c6;
+  font-size: 0.84rem;
+}
+
 .new-chat-button,
 .ghost,
 .history-item,

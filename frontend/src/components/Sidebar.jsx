@@ -11,6 +11,7 @@ export default function Sidebar({
   activeConversationId,
   onNewConversation,
   onSelectConversation,
+  onUpload,
   onDeleteDocument,
   onLogout,
 }) {
@@ -39,6 +40,15 @@ export default function Sidebar({
       </div>
 
       <div className="sidebar-section">
+        <label className="upload-sidebar-button">
+          <input type="file" accept=".pdf,.txt,.md" hidden onChange={onUpload} />
+          <span className="upload-sidebar-button__icon">+</span>
+          <span className="upload-sidebar-button__text">
+            <strong>{"Th\u00eam t\u00e0i li\u1ec7u"}</strong>
+            <small>PDF, TXT, Markdown</small>
+          </span>
+        </label>
+
         <p className="section-title">{"T\u00e0i li\u1ec7u \u0111\u00e3 t\u1ea3i l\u00ean"}</p>
         <div className="list">
           {documents.map((doc) => (

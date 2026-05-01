@@ -113,11 +113,12 @@ function Citations({ citations }) {
   );
 }
 
-function AssistantMessage({ messageItem }) {
+function AssistantMessage({ messageItem, conversationId, onAnimationComplete }) {
   const tokens = useMemo(() => splitTokens(messageItem.content), [messageItem.content]);
   const [visibleTokenCount, setVisibleTokenCount] = useState(
     messageItem.animate ? 0 : tokens.length
   );
+  const hasReportedComplete = useRef(false);
 
   useEffect(() => {
     if (!messageItem.animate) {
@@ -142,6 +143,12 @@ function AssistantMessage({ messageItem }) {
   const isComplete = visibleTokenCount >= tokens.length;
   const visibleContent = tokens.slice(0, visibleTokenCount).join("");
 
+  useEffect(() => {
+    if (!messageItem.animate || !isComplete || hasReportedComplete.current) return;
+    hasReportedComplete.current = true;
+    onAnimationComplete?.(conversationId, messageItem.created_at);
+  }, [conversationId, isComplete, messageItem.animate, messageItem.created_at, onAnimationComplete]);
+
   return (
     <>
       <MessageText content={visibleContent} />
@@ -153,7 +160,7 @@ function AssistantMessage({ messageItem }) {
   );
 }
 
-function MessageBubble({ messageItem }) {
+function MessageBubble({ messageItem, conversationId, onAnimationComplete }) {
   const isAssistant = messageItem.role === "assistant";
 
   return (
@@ -163,7 +170,11 @@ function MessageBubble({ messageItem }) {
         {messageItem.loading ? (
           <LoadingBubble />
         ) : isAssistant ? (
-          <AssistantMessage messageItem={messageItem} />
+          <AssistantMessage
+            messageItem={messageItem}
+            conversationId={conversationId}
+            onAnimationComplete={onAnimationComplete}
+          />
         ) : (
           <MessageText content={messageItem.content} />
         )}
@@ -172,7 +183,12 @@ function MessageBubble({ messageItem }) {
   );
 }
 
-export default function ChatPanel({ conversation, onSend, onUpload, loading }) {
+export default function ChatPanel({
+  conversation,
+  onSend,
+  onAssistantAnimationComplete,
+  loading,
+}) {
   const [message, setMessage] = useState("");
   const messagesRef = useRef(null);
   const messages = conversation?.messages || [];
@@ -190,6 +206,12 @@ export default function ChatPanel({ conversation, onSend, onUpload, loading }) {
     if (!trimmed || loading) return;
     setMessage("");
     await onSend(trimmed);
+  };
+
+  const handleComposerKeyDown = (event) => {
+    if (event.key !== "Enter" || event.shiftKey) return;
+    event.preventDefault();
+    event.currentTarget.form?.requestSubmit();
   };
 
   return (
@@ -213,6 +235,8 @@ export default function ChatPanel({ conversation, onSend, onUpload, loading }) {
           <MessageBubble
             key={messageItem.id || `${messageItem.created_at}-${index}`}
             messageItem={messageItem}
+            conversationId={conversation?.id}
+            onAnimationComplete={onAssistantAnimationComplete}
           />
         ))}
       </main>
@@ -224,12 +248,9 @@ export default function ChatPanel({ conversation, onSend, onUpload, loading }) {
             rows={3}
             value={message}
             onChange={(event) => setMessage(event.target.value)}
+            onKeyDown={handleComposerKeyDown}
           />
           <div className="composer-actions">
-            <label className="icon-button upload-inline" title={labels.upload}>
-              <input type="file" accept=".pdf,.txt,.md" hidden onChange={onUpload} />
-              <span aria-hidden="true">+</span>
-            </label>
             <button
               type="submit"
               className="icon-button send-button"

@@ -51,6 +51,35 @@ export default function App() {
     setActiveConversation(null);
   };
 
+  const clearMessageAnimations = (conversation) => ({
+    ...conversation,
+    messages: (conversation.messages || []).map((message) => ({
+      ...message,
+      animate: false,
+    })),
+  });
+
+  const handleSelectConversation = (conversation) => {
+    setActiveConversation(clearMessageAnimations(conversation));
+  };
+
+  const handleAssistantAnimationComplete = (conversationId, createdAt) => {
+    const clearAnimation = (conversation) => {
+      if (!conversation || conversation.id !== conversationId) return conversation;
+      return {
+        ...conversation,
+        messages: (conversation.messages || []).map((message) =>
+          message.role === "assistant" && message.created_at === createdAt
+            ? { ...message, animate: false }
+            : message
+        ),
+      };
+    };
+
+    setActiveConversation((current) => clearAnimation(current));
+    setConversations((prev) => prev.map((item) => clearAnimation(item)));
+  };
+
   const handleSend = async (message) => {
     const now = new Date().toISOString();
     const pendingAssistantId = `pending-${now}`;
@@ -148,14 +177,15 @@ export default function App() {
         conversations={conversations}
         activeConversationId={activeConversation?.id}
         onNewConversation={handleNewConversation}
-        onSelectConversation={setActiveConversation}
+        onSelectConversation={handleSelectConversation}
+        onUpload={handleUpload}
         onDeleteDocument={handleDeleteDocument}
         onLogout={logout}
       />
       <ChatPanel
         conversation={activeConversation}
         onSend={handleSend}
-        onUpload={handleUpload}
+        onAssistantAnimationComplete={handleAssistantAnimationComplete}
         loading={loading}
       />
     </div>
