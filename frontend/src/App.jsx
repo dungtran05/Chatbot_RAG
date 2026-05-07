@@ -47,7 +47,37 @@ export default function App() {
     setDocuments((prev) => prev.filter((item) => item.id !== documentId));
   };
 
+  const handleNewConversation = () => {
+    setActiveConversation(null);
+  };
+
   const handleSend = async (message) => {
+    const now = new Date().toISOString();
+    const pendingAssistantId = `pending-${now}`;
+    const baseConversation =
+      activeConversation || {
+        id: null,
+        title: message.slice(0, 50),
+        updated_at: now,
+        messages: [],
+      };
+    const optimisticConversation = {
+      ...baseConversation,
+      updated_at: now,
+      messages: [
+        ...(baseConversation.messages || []),
+        { role: "user", content: message, created_at: now },
+        {
+          id: pendingAssistantId,
+          role: "assistant",
+          content: "",
+          loading: true,
+          created_at: now,
+        },
+      ],
+    };
+
+    setActiveConversation(optimisticConversation);
     setLoading(true);
     try {
       const { data } = await api.post("/chat", {
@@ -55,31 +85,32 @@ export default function App() {
         conversation_id: activeConversation?.id || null,
       });
 
-      let nextConversation = activeConversation;
+      let nextConversation = optimisticConversation;
       if (!nextConversation || nextConversation.id !== data.metadata.conversation_id) {
         nextConversation = {
           id: data.metadata.conversation_id,
           title: message.slice(0, 50),
           updated_at: new Date().toISOString(),
-          messages: [],
+          messages: optimisticConversation.messages,
         };
       }
 
       const updated = {
         ...nextConversation,
         updated_at: new Date().toISOString(),
-        messages: [
-          ...(nextConversation.messages || []),
-          { role: "user", content: message, created_at: new Date().toISOString() },
-          {
-            role: "assistant",
-            content: data.answer,
-            citations: data.citations,
-            retrieval: data.retrieval,
-            model: data.metadata.model,
-            created_at: new Date().toISOString(),
-          },
-        ],
+        messages: (nextConversation.messages || []).map((item) =>
+          item.id === pendingAssistantId
+            ? {
+                role: "assistant",
+                content: data.answer,
+                animate: true,
+                citations: data.citations,
+                retrieval: data.retrieval,
+                model: data.metadata.model,
+                created_at: new Date().toISOString(),
+              }
+            : item
+        ),
       };
 
       setActiveConversation(updated);
@@ -87,6 +118,19 @@ export default function App() {
         const filtered = prev.filter((item) => item.id !== updated.id);
         return [updated, ...filtered];
       });
+    } catch (error) {
+      setActiveConversation((current) => ({
+        ...(current || optimisticConversation),
+        messages: ((current || optimisticConversation).messages || []).map((item) =>
+          item.id === pendingAssistantId
+            ? {
+                role: "assistant",
+                content: "Không thể gửi câu hỏi. Vui lòng kiểm tra backend và thử lại.",
+                created_at: new Date().toISOString(),
+              }
+            : item
+        ),
+      }));
     } finally {
       setLoading(false);
     }
@@ -103,12 +147,17 @@ export default function App() {
         documents={documents}
         conversations={conversations}
         activeConversationId={activeConversation?.id}
+        onNewConversation={handleNewConversation}
         onSelectConversation={setActiveConversation}
-        onUpload={handleUpload}
         onDeleteDocument={handleDeleteDocument}
         onLogout={logout}
       />
-      <ChatPanel conversation={activeConversation} onSend={handleSend} loading={loading} />
+      <ChatPanel
+        conversation={activeConversation}
+        onSend={handleSend}
+        onUpload={handleUpload}
+        loading={loading}
+      />
     </div>
   );
 }
