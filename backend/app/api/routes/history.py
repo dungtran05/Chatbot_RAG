@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends
+from bson import ObjectId
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.api.deps import get_current_user
 from app.db.mongo import get_database
@@ -29,4 +30,19 @@ async def list_history(current_user=Depends(get_current_user)):
         )
         for item in conversations
     ]
+
+
+@router.delete("/{conversation_id}")
+async def delete_history(conversation_id: str, current_user=Depends(get_current_user)):
+    if not ObjectId.is_valid(conversation_id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid conversation id")
+
+    db = get_database()
+    result = await db[CONVERSATIONS_COLLECTION].delete_one(
+        {"_id": ObjectId(conversation_id), "user_id": str(current_user["_id"])}
+    )
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
+
+    return {"success": True, "conversation_id": conversation_id}
 
