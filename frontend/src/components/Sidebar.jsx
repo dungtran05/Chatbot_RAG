@@ -20,7 +20,7 @@ export default function Sidebar({
       <div className="brand-block">
         <div className="brand-mark">R</div>
         <div>
-          <p className="eyebrow">RAG Chatbot</p>
+          <p className="eyebrow">Trợ Lý Pháp Luật</p>
           <h2>{user.name}</h2>
         </div>
       </div>

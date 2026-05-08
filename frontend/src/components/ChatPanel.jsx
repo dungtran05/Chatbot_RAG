@@ -218,7 +218,7 @@ export default function ChatPanel({
     <section className="chat-panel">
       <header className="chat-header">
         <div>
-          <p className="eyebrow">RAG Chatbot</p>
+          <p className="eyebrow">Trợ lý pháp luật</p>
           <h2>{capitalizeFirstLetter(conversation?.title || labels.newChat)}</h2>
         </div>
       </header>
@@ -226,7 +226,7 @@ export default function ChatPanel({
       <main className="messages" ref={messagesRef}>
         {messages.length === 0 && (
           <div className="empty-state">
-            <h1>RAG Chatbot</h1>
+            <h1>Trợ Lý Pháp Luật</h1>
             <p>{"T\u1ea3i t\u00e0i li\u1ec7u v\u00e0 \u0111\u1eb7t c\u00e2u h\u1ecfi \u0111\u1ec3 nh\u1eadn c\u00e2u tr\u1ea3 l\u1eddi d\u1ef1a tr\u00ean ng\u1eef c\u1ea3nh c\u1ee7a b\u1ea1n."}</p>
           </div>
         )}
