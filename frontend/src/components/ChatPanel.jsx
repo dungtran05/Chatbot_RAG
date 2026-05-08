@@ -113,11 +113,12 @@ function Citations({ citations }) {
   );
 }
 
-function AssistantMessage({ messageItem }) {
+function AssistantMessage({ messageItem, conversationId, onAnimationComplete }) {
   const tokens = useMemo(() => splitTokens(messageItem.content), [messageItem.content]);
   const [visibleTokenCount, setVisibleTokenCount] = useState(
     messageItem.animate ? 0 : tokens.length
   );
+  const hasReportedComplete = useRef(false);
 
   useEffect(() => {
     if (!messageItem.animate) {
@@ -142,6 +143,12 @@ function AssistantMessage({ messageItem }) {
   const isComplete = visibleTokenCount >= tokens.length;
   const visibleContent = tokens.slice(0, visibleTokenCount).join("");
 
+  useEffect(() => {
+    if (!messageItem.animate || !isComplete || hasReportedComplete.current) return;
+    hasReportedComplete.current = true;
+    onAnimationComplete?.(conversationId, messageItem.created_at);
+  }, [conversationId, isComplete, messageItem.animate, messageItem.created_at, onAnimationComplete]);
+
   return (
     <>
       <MessageText content={visibleContent} />
@@ -153,7 +160,7 @@ function AssistantMessage({ messageItem }) {
   );
 }
 
-function MessageBubble({ messageItem }) {
+function MessageBubble({ messageItem, conversationId, onAnimationComplete }) {
   const isAssistant = messageItem.role === "assistant";
 
   return (
@@ -163,7 +170,11 @@ function MessageBubble({ messageItem }) {
         {messageItem.loading ? (
           <LoadingBubble />
         ) : isAssistant ? (
-          <AssistantMessage messageItem={messageItem} />
+          <AssistantMessage
+            messageItem={messageItem}
+            conversationId={conversationId}
+            onAnimationComplete={onAnimationComplete}
+          />
         ) : (
           <MessageText content={messageItem.content} />
         )}
@@ -172,7 +183,12 @@ function MessageBubble({ messageItem }) {
   );
 }
 
-export default function ChatPanel({ conversation, onSend, onUpload, loading }) {
+export default function ChatPanel({
+  conversation,
+  onSend,
+  onAssistantAnimationComplete,
+  loading,
+}) {
   const [message, setMessage] = useState("");
   const messagesRef = useRef(null);
   const messages = conversation?.messages || [];
@@ -192,11 +208,17 @@ export default function ChatPanel({ conversation, onSend, onUpload, loading }) {
     await onSend(trimmed);
   };
 
+  const handleComposerKeyDown = (event) => {
+    if (event.key !== "Enter" || event.shiftKey) return;
+    event.preventDefault();
+    event.currentTarget.form?.requestSubmit();
+  };
+
   return (
     <section className="chat-panel">
       <header className="chat-header">
         <div>
-          <p className="eyebrow">RAG Chatbot</p>
+          <p className="eyebrow">Trợ lý pháp luật</p>
           <h2>{capitalizeFirstLetter(conversation?.title || labels.newChat)}</h2>
         </div>
       </header>
@@ -204,7 +226,7 @@ export default function ChatPanel({ conversation, onSend, onUpload, loading }) {
       <main className="messages" ref={messagesRef}>
         {messages.length === 0 && (
           <div className="empty-state">
-            <h1>RAG Chatbot</h1>
+            <h1>Trợ Lý Pháp Luật</h1>
             <p>{"T\u1ea3i t\u00e0i li\u1ec7u v\u00e0 \u0111\u1eb7t c\u00e2u h\u1ecfi \u0111\u1ec3 nh\u1eadn c\u00e2u tr\u1ea3 l\u1eddi d\u1ef1a tr\u00ean ng\u1eef c\u1ea3nh c\u1ee7a b\u1ea1n."}</p>
           </div>
         )}
@@ -213,6 +235,8 @@ export default function ChatPanel({ conversation, onSend, onUpload, loading }) {
           <MessageBubble
             key={messageItem.id || `${messageItem.created_at}-${index}`}
             messageItem={messageItem}
+            conversationId={conversation?.id}
+            onAnimationComplete={onAssistantAnimationComplete}
           />
         ))}
       </main>
@@ -224,12 +248,9 @@ export default function ChatPanel({ conversation, onSend, onUpload, loading }) {
             rows={3}
             value={message}
             onChange={(event) => setMessage(event.target.value)}
+            onKeyDown={handleComposerKeyDown}
           />
           <div className="composer-actions">
-            <label className="icon-button upload-inline" title={labels.upload}>
-              <input type="file" accept=".pdf,.txt,.md" hidden onChange={onUpload} />
-              <span aria-hidden="true">+</span>
-            </label>
             <button
               type="submit"
               className="icon-button send-button"

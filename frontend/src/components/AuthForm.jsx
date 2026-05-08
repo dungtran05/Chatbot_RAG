@@ -39,7 +39,7 @@ export default function AuthForm() {
   return (
     <div className="auth-shell">
       <form className="auth-card" onSubmit={submit}>
-        <p className="eyebrow">Chatbot RAG</p>
+        <p className="eyebrow">Trợ lý pháp luật</p>
         <h1>{mode === "login" ? text.login : text.titleRegister}</h1>
         {mode === "register" && (
           <input
