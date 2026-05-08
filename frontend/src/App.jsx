@@ -63,6 +63,12 @@ export default function App() {
     setActiveConversation(clearMessageAnimations(conversation));
   };
 
+  const handleDeleteConversation = async (conversationId) => {
+    await api.delete(`/history/${conversationId}`);
+    setConversations((prev) => prev.filter((item) => item.id !== conversationId));
+    setActiveConversation((current) => (current?.id === conversationId ? null : current));
+  };
+
   const handleAssistantAnimationComplete = (conversationId, createdAt) => {
     const clearAnimation = (conversation) => {
       if (!conversation || conversation.id !== conversationId) return conversation;
@@ -178,6 +184,7 @@ export default function App() {
         activeConversationId={activeConversation?.id}
         onNewConversation={handleNewConversation}
         onSelectConversation={handleSelectConversation}
+        onDeleteConversation={handleDeleteConversation}
         onUpload={handleUpload}
         onDeleteDocument={handleDeleteDocument}
         onLogout={logout}

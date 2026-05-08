@@ -11,6 +11,7 @@ export default function Sidebar({
   activeConversationId,
   onNewConversation,
   onSelectConversation,
+  onDeleteConversation,
   onUpload,
   onDeleteDocument,
   onLogout,
@@ -76,15 +77,26 @@ export default function Sidebar({
         <p className="section-title">{"L\u1ecbch s\u1eed tr\u00f2 chuy\u1ec7n"}</p>
         <div className="list">
           {conversations.map((item) => (
-            <button
+            <div
               key={item.id}
               className={`history-item ${activeConversationId === item.id ? "active" : ""}`}
-              type="button"
-              onClick={() => onSelectConversation(item)}
             >
-              <strong>{capitalizeFirstLetter(item.title)}</strong>
-              <span>{new Date(item.updated_at).toLocaleString()}</span>
-            </button>
+              <button
+                className="history-select-button"
+                type="button"
+                onClick={() => onSelectConversation(item)}
+              >
+                <strong>{capitalizeFirstLetter(item.title)}</strong>
+                <span>{new Date(item.updated_at).toLocaleString()}</span>
+              </button>
+              <button
+                type="button"
+                className="delete-history-button"
+                onClick={() => onDeleteConversation(item.id)}
+              >
+                {"X\u00f3a"}
+              </button>
+            </div>
           ))}
           {conversations.length === 0 && (
             <p className="empty-list">{"Ch\u01b0a c\u00f3 l\u1ecbch s\u1eed."}</p>
