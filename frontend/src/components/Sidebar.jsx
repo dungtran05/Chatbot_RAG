@@ -18,6 +18,7 @@ export default function Sidebar({
 }) {
   return (
     <aside className="sidebar">
+      {/* Khu vực thông tin người dùng và tên ứng dụng. */}
       <div className="brand-block">
         <div className="brand-mark">R</div>
         <div>
@@ -26,6 +27,7 @@ export default function Sidebar({
         </div>
       </div>
 
+      {/* Các thao tác tài khoản: tạo chat mới và đăng xuất. */}
       <div className="sidebar-section">
         <button className="new-chat-button" type="button" onClick={onNewConversation}>
           <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -40,6 +42,7 @@ export default function Sidebar({
         </button>
       </div>
 
+      {/* Khu vực upload, hiển thị và xóa tài liệu đã tải lên. */}
       <div className="sidebar-section">
         <label className="upload-sidebar-button">
           <input type="file" accept=".pdf,.txt,.md" hidden onChange={onUpload} />
@@ -73,6 +76,7 @@ export default function Sidebar({
         </div>
       </div>
 
+      {/* Danh sách lịch sử trò chuyện, cho phép mở lại hoặc xóa từng cuộc trò chuyện. */}
       <div className="sidebar-section">
         <p className="section-title">{"L\u1ecbch s\u1eed tr\u00f2 chuy\u1ec7n"}</p>
         <div className="list">

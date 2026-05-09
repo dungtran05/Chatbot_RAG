@@ -11,10 +11,12 @@ router = APIRouter()
 @router.post("/register", response_model=TokenResponse)
 async def register(payload: UserCreate):
     db = get_database()
+    # Không cho đăng ký trùng email.
     existing = await db[USERS_COLLECTION].find_one({"email": payload.email})
     if existing:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already exists")
 
+    # Lưu user mới với mật khẩu đã hash, sau đó trả token để frontend đăng nhập ngay.
     user = {"name": payload.name, "email": payload.email, "password": hash_password(payload.password)}
     result = await db[USERS_COLLECTION].insert_one(user)
     user_id = str(result.inserted_id)
@@ -28,10 +30,12 @@ async def register(payload: UserCreate):
 @router.post("/login", response_model=TokenResponse)
 async def login(payload: UserLogin):
     db = get_database()
+    # Tìm user theo email và kiểm tra mật khẩu.
     user = await db[USERS_COLLECTION].find_one({"email": payload.email})
     if not user or not verify_password(payload.password, user["password"]):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
+    # Đăng nhập thành công thì tạo JWT token cho các request tiếp theo.
     user_id = str(user["_id"])
     token = create_access_token(user_id)
     return TokenResponse(

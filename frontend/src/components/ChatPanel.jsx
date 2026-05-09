@@ -31,6 +31,7 @@ function shouldBold(text) {
 }
 
 function InlineText({ text }) {
+  // Render markdown bold đơn giản từ câu trả lời của assistant.
   const parts = text.split(/(\*\*[^*]+\*\*)/g).filter(Boolean);
 
   return parts.map((part, index) => {
@@ -46,6 +47,7 @@ function InlineText({ text }) {
 }
 
 function MessageText({ content }) {
+  // Chia nội dung assistant thành đoạn văn hoặc danh sách để hiển thị dễ đọc.
   const blocks = content
     .split(/\n\s*\n/)
     .map((block) => block.trim())
@@ -97,6 +99,7 @@ function LoadingBubble() {
 function Citations({ citations }) {
   if (!citations?.length) return null;
 
+  // Hiển thị các nguồn tham khảo mà backend trả về từ quá trình RAG.
   return (
     <div className="message-sources">
       <strong>{labels.citations}</strong>
@@ -121,6 +124,7 @@ function AssistantMessage({ messageItem, conversationId, onAnimationComplete }) 
   const hasReportedComplete = useRef(false);
 
   useEffect(() => {
+    // Tạo hiệu ứng assistant trả lời từng phần thay vì hiện toàn bộ ngay lập tức.
     if (!messageItem.animate) {
       setVisibleTokenCount(tokens.length);
       return undefined;
@@ -194,12 +198,14 @@ export default function ChatPanel({
   const messages = conversation?.messages || [];
 
   useEffect(() => {
+    // Tự động cuộn xuống tin nhắn mới nhất khi có message hoặc loading mới.
     const container = messagesRef.current;
     if (container) {
       container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
     }
   }, [messages.length, loading]);
 
+  // Gửi câu hỏi khi submit form, bỏ qua nội dung rỗng hoặc lúc đang loading.
   const submit = async (event) => {
     event.preventDefault();
     const trimmed = message.trim();
@@ -208,6 +214,7 @@ export default function ChatPanel({
     await onSend(trimmed);
   };
 
+  // Cho phép nhấn Enter để gửi, Shift + Enter để xuống dòng.
   const handleComposerKeyDown = (event) => {
     if (event.key !== "Enter" || event.shiftKey) return;
     event.preventDefault();

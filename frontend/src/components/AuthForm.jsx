@@ -20,6 +20,7 @@ export default function AuthForm() {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState("");
 
+  // Gửi form đăng nhập hoặc đăng ký, sau đó lưu token vào AuthContext.
   const submit = async (event) => {
     event.preventDefault();
     setError("");
