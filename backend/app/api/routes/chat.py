@@ -12,11 +12,15 @@ router = APIRouter()
 
 @router.post("", response_model=ChatResponse)
 async def chat(payload: ChatRequest, current_user=Depends(get_current_user)):
+    # Nhận câu hỏi từ frontend và tìm các đoạn tài liệu liên quan.
     generated_queries, contexts = hybrid_search(str(current_user["_id"]), payload.message)
+    # Gửi câu hỏi + context sang LLM để sinh câu trả lời.
     answer = answer_question(payload.message, contexts)
+    # Lưu câu hỏi và câu trả lời vào lịch sử trò chuyện.
     conversation_id = await append_conversation(
         str(current_user["_id"]), payload.conversation_id, payload.message, answer
     )
+    # Trả nguồn tham khảo để frontend hiển thị citation.
     citations = [
         {
             "index": index,

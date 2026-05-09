@@ -17,11 +17,13 @@ router = APIRouter()
 
 @router.post("/upload", response_model=DocumentResponse)
 async def upload_document(file: UploadFile = File(...), current_user=Depends(get_current_user)):
+    # Nhận file từ frontend và kiểm tra dung lượng trước khi xử lý.
     contents = await file.read()
     size_mb = len(contents) / (1024 * 1024)
     if size_mb > settings.max_upload_size_mb:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="File too large")
 
+    # Lưu file, trích xuất nội dung, chia chunk và index vào vector database.
     document = await save_upload_and_index(str(current_user["_id"]), file.filename, file.content_type or "", contents)
     return DocumentResponse(
         id=str(document["_id"]),
@@ -35,6 +37,7 @@ async def upload_document(file: UploadFile = File(...), current_user=Depends(get
 @router.get("", response_model=list[DocumentResponse])
 async def list_documents(current_user=Depends(get_current_user)):
     db = get_database()
+    # Chỉ lấy tài liệu thuộc về user đang đăng nhập.
     cursor = db[DOCUMENTS_COLLECTION].find({"user_id": str(current_user["_id"])}).sort("uploaded_at", -1)
     documents = await cursor.to_list(length=200)
     return [
@@ -52,6 +55,7 @@ async def list_documents(current_user=Depends(get_current_user)):
 @router.delete("/{document_id}")
 async def delete_document(document_id: str, current_user=Depends(get_current_user)):
     db = get_database()
+    # Kiểm tra id hợp lệ và đảm bảo user chỉ xóa được tài liệu của chính mình.
     if not ObjectId.is_valid(document_id):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid document id")
     document = await db[DOCUMENTS_COLLECTION].find_one(
@@ -60,6 +64,7 @@ async def delete_document(document_id: str, current_user=Depends(get_current_use
     if not document:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found")
 
+    # Xóa các vector chunk của tài liệu trong Qdrant.
     delete_points(
         Filter(
             must=[
@@ -69,11 +74,13 @@ async def delete_document(document_id: str, current_user=Depends(get_current_use
         )
     )
 
+    # Xóa file gốc đã lưu trên ổ đĩa nếu còn tồn tại.
     path = document.get("path")
     if path:
         file_path = Path(path)
         if file_path.exists():
             file_path.unlink()
 
+    # Xóa metadata tài liệu trong MongoDB.
     await db[DOCUMENTS_COLLECTION].delete_one({"_id": ObjectId(document_id)})
     return {"success": True, "document_id": document_id}

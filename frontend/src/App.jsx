@@ -12,6 +12,7 @@ export default function App() {
   const [activeConversation, setActiveConversation] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // Tải danh sách tài liệu và lịch sử trò chuyện của user hiện tại.
   const loadData = async () => {
     const [docsResponse, historyResponse] = await Promise.all([
       api.get("/documents"),
@@ -30,6 +31,7 @@ export default function App() {
     }
   }, [user]);
 
+  // Upload file tài liệu sang backend bằng FormData.
   const handleUpload = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -42,15 +44,18 @@ export default function App() {
     event.target.value = "";
   };
 
+  // Xóa tài liệu khỏi backend và cập nhật lại danh sách trên giao diện.
   const handleDeleteDocument = async (documentId) => {
     await api.delete(`/documents/${documentId}`);
     setDocuments((prev) => prev.filter((item) => item.id !== documentId));
   };
 
+  // Tạo cuộc trò chuyện mới bằng cách bỏ chọn conversation hiện tại.
   const handleNewConversation = () => {
     setActiveConversation(null);
   };
 
+  // Tắt hiệu ứng gõ lại khi mở lịch sử trò chuyện cũ.
   const clearMessageAnimations = (conversation) => ({
     ...conversation,
     messages: (conversation.messages || []).map((message) => ({
@@ -63,12 +68,14 @@ export default function App() {
     setActiveConversation(clearMessageAnimations(conversation));
   };
 
+  // Xóa một cuộc trò chuyện trong lịch sử.
   const handleDeleteConversation = async (conversationId) => {
     await api.delete(`/history/${conversationId}`);
     setConversations((prev) => prev.filter((item) => item.id !== conversationId));
     setActiveConversation((current) => (current?.id === conversationId ? null : current));
   };
 
+  // Khi hiệu ứng trả lời chạy xong, lưu trạng thái để không animate lại.
   const handleAssistantAnimationComplete = (conversationId, createdAt) => {
     const clearAnimation = (conversation) => {
       if (!conversation || conversation.id !== conversationId) return conversation;
@@ -86,6 +93,7 @@ export default function App() {
     setConversations((prev) => prev.map((item) => clearAnimation(item)));
   };
 
+  // Gửi câu hỏi đến backend, hiển thị loading trước rồi thay bằng câu trả lời thật.
   const handleSend = async (message) => {
     const now = new Date().toISOString();
     const pendingAssistantId = `pending-${now}`;
@@ -120,6 +128,7 @@ export default function App() {
         conversation_id: activeConversation?.id || null,
       });
 
+      // Nếu backend tạo conversation mới, frontend cập nhật lại id thật từ response.
       let nextConversation = optimisticConversation;
       if (!nextConversation || nextConversation.id !== data.metadata.conversation_id) {
         nextConversation = {

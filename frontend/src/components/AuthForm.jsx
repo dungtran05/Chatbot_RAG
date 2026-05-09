@@ -16,22 +16,29 @@ const text = {
 
 export default function AuthForm() {
   const { login } = useAuth();
+  // mode quyet dinh form dang o man hinh dang nhap hay dang ky.
   const [mode, setMode] = useState("login");
+  // Luu du lieu nguoi dung nhap tren form.
   const [form, setForm] = useState({ name: "", email: "", password: "" });
+  // Luu thong bao loi neu API dang nhap/dang ky that bai.
   const [error, setError] = useState("");
 
+  // Gui form dang nhap hoac dang ky, sau do luu token vao AuthContext.
   const submit = async (event) => {
     event.preventDefault();
     setError("");
     try {
+      // Chon endpoint va payload tuy theo che do hien tai.
       const endpoint = mode === "login" ? "/auth/login" : "/auth/register";
       const payload =
         mode === "login"
           ? { email: form.email, password: form.password }
           : form;
       const { data } = await api.post(endpoint, payload);
+      // API thanh cong thi luu token + user de vao man hinh chat.
       login(data);
     } catch (err) {
+      // API that bai thi hien loi cho nguoi dung.
       setError(err.response?.data?.detail || text.failed);
     }
   };
@@ -41,6 +48,7 @@ export default function AuthForm() {
       <form className="auth-card" onSubmit={submit}>
         <p className="eyebrow">Trợ lý pháp luật</p>
         <h1>{mode === "login" ? text.login : text.titleRegister}</h1>
+        {/* Truong ho ten chi hien khi nguoi dung dang ky tai khoan moi. */}
         {mode === "register" && (
           <input
             placeholder={text.name}
@@ -61,6 +69,7 @@ export default function AuthForm() {
           onChange={(event) => setForm({ ...form, password: event.target.value })}
         />
         {error && <div className="error-text">{error}</div>}
+        {/* Nut submit se doi chu theo dang nhap/dang ky. */}
         <button type="submit">{mode === "login" ? text.login : text.register}</button>
         <button
           type="button"
